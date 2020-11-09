@@ -4,14 +4,14 @@
 
 #include "execution.hpp"
 #include "analysis.hpp"
-#include <papi.h>
+#include <x86intrin.h>
 #include <iostream>
 #include <memory>
 
 namespace evmone
 {
-long_long start_cycles;
-long_long end_cycles;
+uint64_t start_cycles;
+uint64_t end_cycles;
 
 evmc_result execute(evmc_vm* /*unused*/, const evmc_host_interface* host, evmc_host_context* ctx,
     evmc_revision rev, const evmc_message* msg, const uint8_t* code, size_t code_size) noexcept
@@ -21,12 +21,12 @@ evmc_result execute(evmc_vm* /*unused*/, const evmc_host_interface* host, evmc_h
     auto state = std::make_unique<execution_state>(*msg, rev, *host, ctx, code, code_size);
     state->analysis = &analysis;
 
-    start_cycles = PAPI_get_real_cyc();
+    start_cycles = __rdtsc();
 
     const auto* instr = &state->analysis->instrs[0];
     while (instr != nullptr)
     {
-        end_cycles = PAPI_get_real_cyc();
+        end_cycles = __rdtsc();
         instr = instr->fn(instr, *state);
     }
 
