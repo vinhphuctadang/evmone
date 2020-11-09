@@ -20,7 +20,7 @@ add_library(evmone
     limits.hpp
     opcodes_helpers.h
 )
-target_link_libraries(evmone PUBLIC evmc::evmc PRIVATE intx::intx ethash::keccak)
+target_link_libraries(evmone PUBLIC evmc::evmc PRIVATE intx::intx ethash::keccak papi)
 target_include_directories(evmone PUBLIC
     $<BUILD_INTERFACE:${include_dir}>$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
@@ -41,4 +41,4 @@ endif()
 
 set_source_files_properties(evmone.cpp PROPERTIES COMPILE_DEFINITIONS PROJECT_VERSION="${PROJECT_VERSION}")
 
-add_standalone_library(evmone)
+#add_standalone_library(evmone)
