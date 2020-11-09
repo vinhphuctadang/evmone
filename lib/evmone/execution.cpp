@@ -4,10 +4,16 @@
 
 #include "execution.hpp"
 #include "analysis.hpp"
+#include <chrono>
 #include <memory>
 
 namespace evmone
 {
+using clock = std::chrono::steady_clock;
+
+clock::time_point end_time;
+
+
 evmc_result execute(evmc_vm* /*unused*/, const evmc_host_interface* host, evmc_host_context* ctx,
     evmc_revision rev, const evmc_message* msg, const uint8_t* code, size_t code_size) noexcept
 {
@@ -18,7 +24,10 @@ evmc_result execute(evmc_vm* /*unused*/, const evmc_host_interface* host, evmc_h
 
     const auto* instr = &state->analysis->instrs[0];
     while (instr != nullptr)
+    {
+        end_time = clock::now();
         instr = instr->fn(instr, *state);
+    }
 
     const auto gas_left =
         (state->status == EVMC_SUCCESS || state->status == EVMC_REVERT) ? state->gas_left : 0;
