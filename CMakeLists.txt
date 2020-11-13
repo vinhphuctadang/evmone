@@ -47,6 +47,9 @@ cable_configure_compiler()
 if(CABLE_COMPILER_GNULIKE)
     add_compile_options(-Wno-attributes)  # Allow using unknown attributes.
 
+    string(REPLACE "-O2 -g" "-O3 -g3" CMAKE_C_FLAGS_RELWITHDEBINFO ${CMAKE_C_FLAGS_RELWITHDEBINFO})
+    string(REPLACE "-O2 -g" "-O3 -g3" CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
+
     if(CABLE_COMPILER_CLANG)
         set(CMAKE_CXX_FLAGS_COVERAGE "-fprofile-instr-generate -fcoverage-mapping")
     elseif(CABLE_COMPILER_GNU)
