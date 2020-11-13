@@ -97,9 +97,9 @@ evmc_result baseline_execute(evmc_vm* /*vm*/, const evmc_host_interface* host,
 
     auto state = std::make_unique<ExecutionState>(*msg, rev, *host, ctx, code, code_size);
 
-    const auto code_end = code + code_size;
+//    const auto code_end = code + code_size;
     auto* pc = code;
-    while (pc != code_end)
+    while (true)
     {
         const auto op = *pc;
 
