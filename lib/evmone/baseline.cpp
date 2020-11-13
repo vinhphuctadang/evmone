@@ -66,13 +66,13 @@ inline void op_return(ExecutionState& state) noexcept
     state.status = StatusCode;
 }
 
-inline evmc_status_code check_requirements(const char* const* instruction_names,
+inline evmc_status_code check_requirements(
     const evmc_instruction_metrics* instruction_metrics, ExecutionState& state, uint8_t op) noexcept
 {
     const auto metrics = instruction_metrics[op];
 
-    if (instruction_names[op] == nullptr)
-        return EVMC_UNDEFINED_INSTRUCTION;
+    //    if (instruction_names[op] == nullptr)
+    //        return EVMC_UNDEFINED_INSTRUCTION;
 
     if ((state.gas_left -= metrics.gas_cost) < 0)
         return EVMC_OUT_OF_GAS;
@@ -91,19 +91,18 @@ evmc_result baseline_execute(evmc_vm* /*vm*/, const evmc_host_interface* host,
     evmc_host_context* ctx, evmc_revision rev, const evmc_message* msg, const uint8_t* code,
     size_t code_size) noexcept
 {
-    const auto instruction_names = evmc_get_instruction_names_table(rev);
     const auto instruction_metrics = evmc_get_instruction_metrics_table(rev);
     const auto jumpdest_map = build_jumpdest_map(code, code_size);
 
     auto state = std::make_unique<ExecutionState>(*msg, rev, *host, ctx, code, code_size);
 
-//    const auto code_end = code + code_size;
+    //    const auto code_end = code + code_size;
     auto* pc = code;
     while (true)
     {
         const auto op = *pc;
 
-        const auto status = check_requirements(instruction_names, instruction_metrics, *state, op);
+        const auto status = check_requirements(instruction_metrics, *state, op);
         if (status != EVMC_SUCCESS)
         {
             state->status = status;
