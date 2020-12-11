@@ -13,6 +13,7 @@ add_library(evmone
     analysis.hpp
     baseline.cpp
     baseline.hpp
+    baseline_instruction_table.cpp
     evmone.cpp
     execution.cpp
     execution.hpp
