@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "baseline.hpp"
+#include "baseline_instruction_table.hpp"
 #include "execution_state.hpp"
 #include "instructions.hpp"
 #include <evmc/instructions.h>
@@ -73,12 +74,12 @@ inline void op_return(ExecutionState& state) noexcept
     state.status = StatusCode;
 }
 
-inline evmc_status_code check_requirements(const char* const* instruction_names,
-    const evmc_instruction_metrics* instruction_metrics, ExecutionState& state, uint8_t op) noexcept
+inline evmc_status_code check_requirements(
+    const InstructionTable& instruction_table, ExecutionState& state, uint8_t op) noexcept
 {
-    const auto metrics = instruction_metrics[op];
+    const auto metrics = instruction_table[op];
 
-    if (instruction_names[op] == nullptr)
+    if (metrics.gas_cost < 0)
         return EVMC_UNDEFINED_INSTRUCTION;
 
     if ((state.gas_left -= metrics.gas_cost) < 0)
@@ -98,8 +99,7 @@ evmc_result baseline_execute(evmc_vm* /*vm*/, const evmc_host_interface* host,
     evmc_host_context* ctx, evmc_revision rev, const evmc_message* msg, const uint8_t* code,
     size_t code_size) noexcept
 {
-    const auto instruction_names = evmc_get_instruction_names_table(rev);
-    const auto instruction_metrics = evmc_get_instruction_metrics_table(rev);
+    const auto& instruction_table = get_baseline_instruction_table(rev);
     const auto jumpdest_map = build_jumpdest_map(code, code_size);
 
     auto state = std::make_unique<ExecutionState>(*msg, rev, *host, ctx, code, code_size);
@@ -110,7 +110,7 @@ evmc_result baseline_execute(evmc_vm* /*vm*/, const evmc_host_interface* host,
     {
         const auto op = *pc;
 
-        const auto status = check_requirements(instruction_names, instruction_metrics, *state, op);
+        const auto status = check_requirements(instruction_table, *state, op);
         if (status != EVMC_SUCCESS)
         {
             state->status = status;

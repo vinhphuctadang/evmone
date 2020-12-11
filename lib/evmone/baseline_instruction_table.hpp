@@ -11,8 +11,8 @@ namespace evmone
 struct InstructionTableEntry
 {
     int16_t gas_cost;
-    int8_t stack_req;
-    int8_t stack_change;
+    int8_t stack_height_required;
+    int8_t stack_height_change;
 };
 
 using InstructionTable = std::array<InstructionTableEntry, 256>;
