@@ -124,7 +124,7 @@ evmc_result execute(ExecutionState& state, const CodeAnalysis& analysis) noexcep
 
     const auto code_end = code + code_size;
     auto* pc = code;
-    while (pc != code_end)
+    while (true)  // Guaranteed to terminate because code must end with STOP.
     {
         const auto op = *pc;
 
