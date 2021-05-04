@@ -6,6 +6,7 @@
 #include "execution_state.hpp"
 #include <evmc/evmc.h>
 #include <evmc/utils.h>
+#include <memory>
 #include <vector>
 
 namespace evmone::baseline
@@ -14,6 +15,8 @@ struct CodeAnalysis
 {
     using JumpdestMap = std::vector<bool>;
 
+    std::unique_ptr<uint8_t[]> padded_code;
+    std::size_t code_size = 0;
     JumpdestMap jumpdest_map;
 };
 

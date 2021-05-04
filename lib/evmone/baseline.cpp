@@ -12,6 +12,13 @@ namespace evmone::baseline
 {
 CodeAnalysis analyze(const uint8_t* code, size_t code_size)
 {
+    constexpr auto code_padding = 33;
+    CodeAnalysis analysis;
+
+    analysis.padded_code.reset(new uint8_t[code_size + code_padding]);
+    std::copy_n(code, code_size, analysis.padded_code.get());
+    std::fill_n(analysis.padded_code.get() + code_size, code_padding, uint8_t{0});
+
     // To find if op is any PUSH opcode (OP_PUSH1 <= op <= OP_PUSH32)
     // it can be noticed that OP_PUSH32 is INT8_MAX (0x7f) therefore
     // static_cast<int8_t>(op) <= OP_PUSH32 is always true and can be skipped.
@@ -26,7 +33,9 @@ CodeAnalysis analyze(const uint8_t* code, size_t code_size)
         else if (INTX_UNLIKELY(op == OP_JUMPDEST))
             map[i] = true;
     }
-    return CodeAnalysis{std::move(map)};
+    analysis.jumpdest_map = std::move(map);
+
+    return analysis;
 }
 
 namespace
