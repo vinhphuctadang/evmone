@@ -45,6 +45,10 @@ add_subdirectory(evmc)
 
 cable_configure_compiler()
 if(CABLE_COMPILER_GNULIKE)
+    # Disallow interposing of symbols in shared libraries.
+    # This enabled more optimization opportunities.
+    cable_add_cxx_compiler_flag_if_supported(-fno-semantic-interposition)
+
     add_compile_options(
         -Wmissing-declarations
         -Wno-attributes  # Allow using unknown attributes.
