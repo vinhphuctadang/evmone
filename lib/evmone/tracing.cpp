@@ -64,6 +64,26 @@ class HistogramTracer : public Tracer
 public:
     explicit HistogramTracer(std::ostream& out) noexcept : m_out{out} {}
 };
+
+/// Base class for Tracer implementations.
+class BaseTracer : public Tracer
+{
+protected:
+    std::ostream& m_out;              ///< Output stream.
+    const uint8_t* m_code = nullptr;  ///< Reference to the code being executed.
+
+    void on_execution_start(
+        evmc_revision /*rev*/, const evmc_message& /*msg*/, bytes_view code) noexcept override
+    {
+        m_code = code.data();
+    }
+
+    void on_execution_end(const evmc_result& /*result*/) noexcept override { m_code = nullptr; }
+
+public:
+    explicit BaseTracer(std::ostream& out) noexcept : m_out{out} {}
+};
+
 }  // namespace
 
 std::unique_ptr<Tracer> create_histogram_tracer(std::ostream& out)
