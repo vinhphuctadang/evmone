@@ -136,3 +136,17 @@ DUP1,1
 SWAP1,1
 )");
 }
+
+TEST_F(tracing, trace)
+{
+    vm.add_tracer(evmone::create_instruction_tracer(trace_stream));
+
+    trace_stream << '\n';
+    EXPECT_EQ(trace(add(2, 3)), R"(
+{"start":true,"depth":0}
+{"pc":0,"op":96,"opName":"PUSH1","gas":1000000}
+{"pc":2,"op":96,"opName":"PUSH1","gas":999997}
+{"pc":4,"op":1,"opName":"ADD","gas":999994}
+{"end":true,"gas":999991}
+)");
+}

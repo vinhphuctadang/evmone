@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "tracing.hpp"
+#include "execution_state.hpp"
 #include <evmc/hex.hpp>
 #include <stack>
 
@@ -84,10 +85,56 @@ public:
     explicit BaseTracer(std::ostream& out) noexcept : m_out{out} {}
 };
 
+class InstructionTracer : public BaseTracer
+{
+    const char* const* m_opcode_names = nullptr;
+
+    void on_execution_start(
+        evmc_revision rev, const evmc_message& msg, bytes_view code) noexcept override
+    {
+        BaseTracer::on_execution_start(rev, msg, code);
+        m_opcode_names = evmc_get_instruction_names_table(rev);
+        m_out << std::dec;  // Set number formatting to dec, JSON does not support other forms.
+
+        m_out << "{";
+        m_out << R"("start":true)";
+        m_out << R"(,"depth":)" << msg.depth;
+        m_out << "}\n";
+    }
+
+    void on_instruction_start(uint32_t pc, const ExecutionState& state) noexcept override
+    {
+        const auto opcode = m_code[pc];
+        m_out << "{";
+        m_out << R"("pc":)" << pc;
+        m_out << R"(,"op":)" << int{opcode};
+        m_out << R"(,"opName":")" << m_opcode_names[opcode] << '"';
+        m_out << R"(,"gas":)" << state.gas_left;
+        m_out << "}\n";
+    }
+
+    void on_execution_end(const evmc_result& result) noexcept override
+    {
+        m_out << "{";
+        m_out << R"("end":true)";
+        m_out << R"(,"gas":)" << result.gas_left;
+        m_out << "}\n";
+
+        BaseTracer::on_execution_end(result);
+    }
+
+public:
+    using BaseTracer::BaseTracer;
+};
 }  // namespace
 
 std::unique_ptr<Tracer> create_histogram_tracer(std::ostream& out)
 {
     return std::make_unique<HistogramTracer>(out);
+}
+
+std::unique_ptr<Tracer> create_instruction_tracer(std::ostream& out)
+{
+    return std::make_unique<InstructionTracer>(out);
 }
 }  // namespace evmone
