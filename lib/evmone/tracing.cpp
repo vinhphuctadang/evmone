@@ -96,7 +96,7 @@ class InstructionTracer : public BaseTracer
         const int req = instr::traits[opcode].stack_height_required;
         const int size = stack.size();
 
-        const auto n = std::min(size, std::max(req, 1));
+        const auto n = std::min(size, std::max(req, 3));
 
         m_out << R"("stack":[)";
 
@@ -111,6 +111,8 @@ class InstructionTracer : public BaseTracer
             m_out << R"(,"...")";
 
         m_out << R"(])";
+
+        m_out << R"(,"stackSize":)" << size;
     }
 
     void on_execution_start(
