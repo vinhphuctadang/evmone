@@ -144,9 +144,28 @@ TEST_F(tracing, trace)
     trace_stream << '\n';
     EXPECT_EQ(trace(add(2, 3)), R"(
 {"start":true,"depth":0}
-{"pc":0,"op":96,"opName":"PUSH1","gas":1000000}
-{"pc":2,"op":96,"opName":"PUSH1","gas":999997}
-{"pc":4,"op":1,"opName":"ADD","gas":999994}
+{"pc":0,"op":96,"opName":"PUSH1","gas":1000000,"stack":[]}
+{"pc":2,"op":96,"opName":"PUSH1","gas":999997,"stack":["0x3"]}
+{"pc":4,"op":1,"opName":"ADD","gas":999994,"stack":["0x2","0x3"]}
 {"end":true,"gas":999991}
+)");
+}
+
+TEST_F(tracing, trace_stack)
+{
+    vm.add_tracer(evmone::create_instruction_tracer(trace_stream));
+
+    const auto code = push(1) + push(2) + push(3) + push(4) + OP_ADD + OP_ADD + OP_ADD;
+    trace_stream << '\n';
+    EXPECT_EQ(trace(code), R"(
+{"start":true,"depth":0}
+{"pc":0,"op":96,"opName":"PUSH1","gas":1000000,"stack":[]}
+{"pc":2,"op":96,"opName":"PUSH1","gas":999997,"stack":["0x1"]}
+{"pc":4,"op":96,"opName":"PUSH1","gas":999994,"stack":["0x2","..."]}
+{"pc":6,"op":96,"opName":"PUSH1","gas":999991,"stack":["0x3","..."]}
+{"pc":8,"op":1,"opName":"ADD","gas":999988,"stack":["0x4","0x3","..."]}
+{"pc":9,"op":1,"opName":"ADD","gas":999985,"stack":["0x7","0x2","..."]}
+{"pc":10,"op":1,"opName":"ADD","gas":999982,"stack":["0x9","0x1"]}
+{"end":true,"gas":999979}
 )");
 }

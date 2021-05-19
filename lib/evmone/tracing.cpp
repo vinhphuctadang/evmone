@@ -4,6 +4,7 @@
 
 #include "tracing.hpp"
 #include "execution_state.hpp"
+#include "instruction_traits.hpp"
 #include <evmc/hex.hpp>
 #include <stack>
 
@@ -85,9 +86,32 @@ public:
     explicit BaseTracer(std::ostream& out) noexcept : m_out{out} {}
 };
 
+
 class InstructionTracer : public BaseTracer
 {
     const char* const* m_opcode_names = nullptr;
+
+    void output_stack(const evm_stack& stack, uint8_t opcode)
+    {
+        const int req = instr::traits[opcode].stack_height_required;
+        const int size = stack.size();
+
+        const auto n = std::min(size, std::max(req, 1));
+
+        m_out << R"("stack":[)";
+
+        for (int i = 0; i < n; ++i)
+        {
+            if (i != 0)
+                m_out << ',';
+            m_out << R"("0x)" << to_string(stack[i], 16) << '"';
+        }
+
+        if (n < size)
+            m_out << R"(,"...")";
+
+        m_out << R"(])";
+    }
 
     void on_execution_start(
         evmc_revision rev, const evmc_message& msg, bytes_view code) noexcept override
@@ -110,6 +134,8 @@ class InstructionTracer : public BaseTracer
         m_out << R"(,"op":)" << int{opcode};
         m_out << R"(,"opName":")" << m_opcode_names[opcode] << '"';
         m_out << R"(,"gas":)" << state.gas_left;
+        m_out << ',';
+        output_stack(state.stack, opcode);
         m_out << "}\n";
     }
 
