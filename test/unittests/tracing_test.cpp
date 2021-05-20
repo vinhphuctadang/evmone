@@ -144,9 +144,9 @@ TEST_F(tracing, trace)
     trace_stream << '\n';
     EXPECT_EQ(trace(add(2, 3)), R"(
 {"start":true,"depth":0}
-{"pc":0,"op":96,"opName":"PUSH1","gas":1000000,"stack":[]}
-{"pc":2,"op":96,"opName":"PUSH1","gas":999997,"stack":["0x3"]}
-{"pc":4,"op":1,"opName":"ADD","gas":999994,"stack":["0x2","0x3"]}
+{"pc":0,"op":96,"opName":"PUSH1","gas":1000000,"stack":[],"stackSize":0,"memory":"","memorySize":0}
+{"pc":2,"op":96,"opName":"PUSH1","gas":999997,"stack":["0x3"],"stackSize":1,"memory":"","memorySize":0}
+{"pc":4,"op":1,"opName":"ADD","gas":999994,"stack":["0x2","0x3"],"stackSize":2,"memory":"","memorySize":0}
 {"end":true,"gas":999991}
 )");
 }
@@ -159,13 +159,13 @@ TEST_F(tracing, trace_stack)
     trace_stream << '\n';
     EXPECT_EQ(trace(code), R"(
 {"start":true,"depth":0}
-{"pc":0,"op":96,"opName":"PUSH1","gas":1000000,"stack":[]}
-{"pc":2,"op":96,"opName":"PUSH1","gas":999997,"stack":["0x1"]}
-{"pc":4,"op":96,"opName":"PUSH1","gas":999994,"stack":["0x2","..."]}
-{"pc":6,"op":96,"opName":"PUSH1","gas":999991,"stack":["0x3","..."]}
-{"pc":8,"op":1,"opName":"ADD","gas":999988,"stack":["0x4","0x3","..."]}
-{"pc":9,"op":1,"opName":"ADD","gas":999985,"stack":["0x7","0x2","..."]}
-{"pc":10,"op":1,"opName":"ADD","gas":999982,"stack":["0x9","0x1"]}
+{"pc":0,"op":96,"opName":"PUSH1","gas":1000000,"stack":[],"stackSize":0,"memory":"","memorySize":0}
+{"pc":2,"op":96,"opName":"PUSH1","gas":999997,"stack":["0x1"],"stackSize":1,"memory":"","memorySize":0}
+{"pc":4,"op":96,"opName":"PUSH1","gas":999994,"stack":["0x2","..."],"stackSize":2,"memory":"","memorySize":0}
+{"pc":6,"op":96,"opName":"PUSH1","gas":999991,"stack":["0x3","..."],"stackSize":3,"memory":"","memorySize":0}
+{"pc":8,"op":1,"opName":"ADD","gas":999988,"stack":["0x4","0x3","..."],"stackSize":4,"memory":"","memorySize":0}
+{"pc":9,"op":1,"opName":"ADD","gas":999985,"stack":["0x7","0x2","..."],"stackSize":3,"memory":"","memorySize":0}
+{"pc":10,"op":1,"opName":"ADD","gas":999982,"stack":["0x9","0x1"],"stackSize":2,"memory":"","memorySize":0}
 {"end":true,"gas":999979}
 )");
 }

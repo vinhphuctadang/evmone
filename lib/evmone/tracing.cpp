@@ -96,7 +96,7 @@ class InstructionTracer : public BaseTracer
         const int req = instr::traits[opcode].stack_height_required;
         const int size = stack.size();
 
-        const auto n = std::min(size, std::max(req, 3));
+        const auto n = std::min(size, std::max(req, 1));
 
         m_out << R"("stack":[)";
 
@@ -113,6 +113,12 @@ class InstructionTracer : public BaseTracer
         m_out << R"(])";
 
         m_out << R"(,"stackSize":)" << size;
+    }
+
+    void output_memory(const evm_memory& memory)
+    {
+        m_out << R"("memory":")" << evmc::hex({memory.data(), memory.size()})
+              << R"(","memorySize":)" << memory.size();
     }
 
     void on_execution_start(
@@ -138,6 +144,8 @@ class InstructionTracer : public BaseTracer
         m_out << R"(,"gas":)" << state.gas_left;
         m_out << ',';
         output_stack(state.stack, opcode);
+        m_out << ',';
+        output_memory(state.memory);
         m_out << "}\n";
     }
 
