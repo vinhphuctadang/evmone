@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "tracing.hpp"
+#include "../../evmc/tools/utils/utils.hpp"
 #include "execution_state.hpp"
 #include "instruction_traits.hpp"
 #include <evmc/hex.hpp>
@@ -124,13 +125,15 @@ class InstructionTracer : public BaseTracer
     void on_execution_start(
         evmc_revision rev, const evmc_message& msg, bytes_view code) noexcept override
     {
+        using namespace evmc;
+
         BaseTracer::on_execution_start(rev, msg, code);
         m_opcode_names = evmc_get_instruction_names_table(rev);
         m_out << std::dec;  // Set number formatting to dec, JSON does not support other forms.
 
         m_out << "{";
-        m_out << R"("start":true)";
-        m_out << R"(,"depth":)" << msg.depth;
+        m_out << R"("depth":)" << msg.depth;
+        m_out << R"(,"rev":")" << rev << '"';
         m_out << "}\n";
     }
 
@@ -151,8 +154,14 @@ class InstructionTracer : public BaseTracer
 
     void on_execution_end(const evmc_result& result) noexcept override
     {
+        using namespace evmc;
+
         m_out << "{";
-        m_out << R"("end":true)";
+        m_out << R"("error":)";
+        if (result.status_code == EVMC_SUCCESS)
+            m_out << "null";
+        else
+            m_out << '"' << result.status_code << '"';
         m_out << R"(,"gas":)" << result.gas_left;
         m_out << "}\n";
 
