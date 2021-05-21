@@ -127,7 +127,10 @@ class InstructionTracer : public Tracer
         m_out << std::dec;  // Set number formatting to dec, JSON does not support other forms.
 
         m_out << "{";
-        m_out << R"("depth":)" << msg.depth;
+        m_out << R"("kind":")"
+              << ((msg.kind == EVMC_CREATE || msg.kind == EVMC_CREATE2) ? "create" : "call") << '"';
+        m_out << R"(,"static":)" << (((msg.flags & EVMC_STATIC) != 0) ? "true" : "false");
+        m_out << R"(,"depth":)" << msg.depth;
         m_out << R"(,"rev":")" << rev << '"';
         m_out << "}\n";
     }
@@ -140,7 +143,7 @@ class InstructionTracer : public Tracer
         m_out << "{";
         m_out << R"("pc":)" << pc;
         m_out << R"(,"op":)" << int{opcode};
-        m_out << R"(,"opName":")" << ctx.opcode_names[opcode] << '"';
+        m_out << R"(,"opName":")" << get_name(ctx.opcode_names, opcode) << '"';
         m_out << R"(,"gas":)" << state.gas_left;
         m_out << ',';
         output_stack(state.stack, opcode);
