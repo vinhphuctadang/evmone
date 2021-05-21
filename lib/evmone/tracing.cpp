@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "tracing.hpp"
-#include "../../evmc/tools/utils/utils.hpp"
 #include "execution_state.hpp"
 #include "instruction_traits.hpp"
 #include <evmc/hex.hpp>
