@@ -100,13 +100,7 @@ class InstructionTracer : public Tracer
     void on_execution_start(
         evmc_revision rev, const evmc_message& msg, bytes_view code) noexcept override
     {
-        // TODO: Add kind and static.
-
-        using namespace evmc;
-
         m_contexts.emplace(code.data(), msg.gas, evmc_get_instruction_names_table(rev));
-
-        m_out << std::dec;  // Set number formatting to dec, JSON does not support other forms.
 
         m_out << "{";
         m_out << R"("kind":")"
@@ -138,8 +132,6 @@ class InstructionTracer : public Tracer
 
     void on_execution_end(const evmc_result& result) noexcept override
     {
-        using namespace evmc;
-
         const auto& ctx = m_contexts.top();
 
         m_out << "{";
@@ -157,7 +149,10 @@ class InstructionTracer : public Tracer
     }
 
 public:
-    explicit InstructionTracer(std::ostream& out) noexcept : m_out{out} {}
+    explicit InstructionTracer(std::ostream& out) noexcept : m_out{out}
+    {
+        m_out << std::dec;  // Set number formatting to dec, JSON does not support other forms.
+    }
 };
 }  // namespace
 
