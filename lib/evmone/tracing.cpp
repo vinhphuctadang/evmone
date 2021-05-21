@@ -68,28 +68,11 @@ public:
     explicit HistogramTracer(std::ostream& out) noexcept : m_out{out} {}
 };
 
-/// Base class for Tracer implementations.
-class BaseTracer : public Tracer
+
+class InstructionTracer : public Tracer
 {
-protected:
     std::ostream& m_out;              ///< Output stream.
     const uint8_t* m_code = nullptr;  ///< Reference to the code being executed.
-
-    void on_execution_start(
-        evmc_revision /*rev*/, const evmc_message& /*msg*/, bytes_view code) noexcept override
-    {
-        m_code = code.data();
-    }
-
-    void on_execution_end(const evmc_result& /*result*/) noexcept override { m_code = nullptr; }
-
-public:
-    explicit BaseTracer(std::ostream& out) noexcept : m_out{out} {}
-};
-
-
-class InstructionTracer : public BaseTracer
-{
     const char* const* m_opcode_names = nullptr;
     int64_t m_start_gas = 0;
 
@@ -131,7 +114,7 @@ class InstructionTracer : public BaseTracer
 
         using namespace evmc;
 
-        BaseTracer::on_execution_start(rev, msg, code);
+        m_code = code.data();
         m_opcode_names = evmc_get_instruction_names_table(rev);
         m_start_gas = msg.gas;
         m_out << std::dec;  // Set number formatting to dec, JSON does not support other forms.
@@ -172,11 +155,11 @@ class InstructionTracer : public BaseTracer
         m_out << R"(,"output":")" << evmc::hex({result.output_data, result.output_size}) << '"';
         m_out << "}\n";
 
-        BaseTracer::on_execution_end(result);
+        m_code = nullptr;
     }
 
 public:
-    using BaseTracer::BaseTracer;
+    explicit InstructionTracer(std::ostream& out) noexcept : m_out{out} {}
 };
 }  // namespace
 
