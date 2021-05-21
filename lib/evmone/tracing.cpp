@@ -93,7 +93,7 @@ class InstructionTracer : public BaseTracer
     const char* const* m_opcode_names = nullptr;
     int64_t m_start_gas = 0;
 
-    void output_stack(const evm_stack& stack, uint8_t opcode)
+    void output_stack(const Stack& stack, uint8_t opcode)
     {
         const int req = instr::traits[opcode].stack_height_required;
         const int size = stack.size();
@@ -117,7 +117,7 @@ class InstructionTracer : public BaseTracer
         m_out << R"(,"stackSize":)" << size;
     }
 
-    void output_memory(const evm_memory& memory)
+    void output_memory(const Memory& memory)
     {
         m_out << R"("memory":")" << evmc::hex({memory.data(), memory.size()})
               << R"(","memorySize":)" << memory.size();
