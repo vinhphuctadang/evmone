@@ -85,28 +85,17 @@ class InstructionTracer : public Tracer
     std::stack<Context> m_contexts;
     std::ostream& m_out;  ///< Output stream.
 
-    void output_stack(const Stack& stack, uint8_t opcode)
+    void output_stack(const Stack& stack)
     {
-        const int req = instr::traits[opcode].stack_height_required;
-        const int size = stack.size();
-
-        const auto n = std::min(size, std::max(req, 1));
-
-        m_out << R"("stack":[)";
-
-        for (int i = 0; i < n; ++i)
+        const auto size = stack.size();
+        m_out << R"(,"stack":[)";
+        for (int i = 0; i < size; ++i)
         {
             if (i != 0)
                 m_out << ',';
             m_out << R"("0x)" << to_string(stack[i], 16) << '"';
         }
-
-        if (n < size)
-            m_out << R"(,"...")";
-
-        m_out << R"(])";
-
-        m_out << R"(,"stackSize":)" << size;
+        m_out << ']';
     }
 
     void on_execution_start(
@@ -139,8 +128,7 @@ class InstructionTracer : public Tracer
         m_out << R"(,"op":)" << int{opcode};
         m_out << R"(,"opName":")" << get_name(ctx.opcode_names, opcode) << '"';
         m_out << R"(,"gas":)" << state.gas_left;
-        m_out << ',';
-        output_stack(state.stack, opcode);
+        output_stack(state.stack);
 
         // Full memory can be dumped as evmc::hex({state.memory.data(), state.memory.size()}),
         // but this should not be done by default. Adding --tracing=+memory option would be nice.
