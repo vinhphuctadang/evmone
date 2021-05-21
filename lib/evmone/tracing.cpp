@@ -109,12 +109,6 @@ class InstructionTracer : public Tracer
         m_out << R"(,"stackSize":)" << size;
     }
 
-    void output_memory(const Memory& memory)
-    {
-        m_out << R"("memory":")" << evmc::hex({memory.data(), memory.size()})
-              << R"(","memorySize":)" << memory.size();
-    }
-
     void on_execution_start(
         evmc_revision rev, const evmc_message& msg, bytes_view code) noexcept override
     {
@@ -147,8 +141,11 @@ class InstructionTracer : public Tracer
         m_out << R"(,"gas":)" << state.gas_left;
         m_out << ',';
         output_stack(state.stack, opcode);
-        m_out << ',';
-        output_memory(state.memory);
+
+        // Full memory can be dumped as evmc::hex({state.memory.data(), state.memory.size()}),
+        // but this should not be done by default. Adding --tracing=+memory option would be nice.
+        m_out << R"(,"memorySize":)" << state.memory.size();
+
         m_out << "}\n";
     }
 
