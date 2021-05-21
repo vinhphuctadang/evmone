@@ -71,10 +71,19 @@ public:
 
 class InstructionTracer : public Tracer
 {
-    std::ostream& m_out;              ///< Output stream.
-    const uint8_t* m_code = nullptr;  ///< Reference to the code being executed.
-    const char* const* m_opcode_names = nullptr;
-    int64_t m_start_gas = 0;
+    struct Context
+    {
+        const uint8_t* const code;  ///< Reference to the code being executed.
+        const int64_t start_gas;
+        const char* const* const opcode_names;
+
+        Context(const uint8_t* c, int64_t g, const char* const* n) noexcept
+          : code{c}, start_gas{g}, opcode_names{n}
+        {}
+    };
+
+    std::stack<Context> m_contexts;
+    std::ostream& m_out;  ///< Output stream.
 
     void output_stack(const Stack& stack, uint8_t opcode)
     {
@@ -110,13 +119,11 @@ class InstructionTracer : public Tracer
         evmc_revision rev, const evmc_message& msg, bytes_view code) noexcept override
     {
         // TODO: Add kind and static.
-        // TODO: create context.
 
         using namespace evmc;
 
-        m_code = code.data();
-        m_opcode_names = evmc_get_instruction_names_table(rev);
-        m_start_gas = msg.gas;
+        m_contexts.emplace(code.data(), msg.gas, evmc_get_instruction_names_table(rev));
+
         m_out << std::dec;  // Set number formatting to dec, JSON does not support other forms.
 
         m_out << "{";
@@ -127,11 +134,13 @@ class InstructionTracer : public Tracer
 
     void on_instruction_start(uint32_t pc, const ExecutionState& state) noexcept override
     {
-        const auto opcode = m_code[pc];
+        const auto& ctx = m_contexts.top();
+
+        const auto opcode = ctx.code[pc];
         m_out << "{";
         m_out << R"("pc":)" << pc;
         m_out << R"(,"op":)" << int{opcode};
-        m_out << R"(,"opName":")" << m_opcode_names[opcode] << '"';
+        m_out << R"(,"opName":")" << ctx.opcode_names[opcode] << '"';
         m_out << R"(,"gas":)" << state.gas_left;
         m_out << ',';
         output_stack(state.stack, opcode);
@@ -144,6 +153,8 @@ class InstructionTracer : public Tracer
     {
         using namespace evmc;
 
+        const auto& ctx = m_contexts.top();
+
         m_out << "{";
         m_out << R"("error":)";
         if (result.status_code == EVMC_SUCCESS)
@@ -151,11 +162,11 @@ class InstructionTracer : public Tracer
         else
             m_out << '"' << result.status_code << '"';
         m_out << R"(,"gas":)" << result.gas_left;
-        m_out << R"(,"gasUsed":)" << (m_start_gas - result.gas_left);
+        m_out << R"(,"gasUsed":)" << (ctx.start_gas - result.gas_left);
         m_out << R"(,"output":")" << evmc::hex({result.output_data, result.output_size}) << '"';
         m_out << "}\n";
 
-        m_code = nullptr;
+        m_contexts.pop();
     }
 
 public:
